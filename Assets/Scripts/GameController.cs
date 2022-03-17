@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -10,6 +11,9 @@ public class GameController : MonoBehaviour
     public GameObject FoodPrefab;
     // snake controllers
     public List<SnakeController> SnakeControllers = new List<SnakeController>();
+
+    //list of spawn points
+    public List<Transform> SpawnPoints = new List<Transform>();
 
     // time to wait for the next move
     public float InitialMoveDelay = 0.5f;
@@ -59,9 +63,9 @@ public class GameController : MonoBehaviour
     // create the snake
     private void CreateSnake(int player)
     {
-        // create the snake head at a random position
-        Vector2 position = new Vector2(Mathf.Round(Random.Range(0, 10)), Mathf.Round(Random.Range(0, 10)));
-        GameObject SnakeHead = Instantiate(SnakePrefab, new Vector3(position.x, position.y, 0), Quaternion.identity);
+        // create the snake head at spawn point
+        var SnakeHead = Instantiate(this.SnakePrefab, this.SpawnPoints[player].position, Quaternion.identity);
+
         SnakeHead.name = "SnakeHead";
         SnakeController SnakeController = SnakeHead.GetComponent<SnakeController>();
         SnakeController.SnakeParts = new List<GameObject>();
@@ -158,55 +162,13 @@ public class GameController : MonoBehaviour
 
     public void Die(int player)
     {
-        Debug.Log("Snake(" + player + ") died");
-
-        // destroy all the snake parts (except the head) of all the snakes
+        //loop throught all controllers and save the score
         for (int i = 0; i < SnakeControllers.Count; i++)
         {
-            for (int j = 1; j < SnakeControllers[i].SnakeParts.Count; j++)
-            {
-                Destroy(SnakeControllers[i].SnakeParts[j]);
-            }
-            Vector2 position = new Vector2(Mathf.Round(Random.Range(0, 10)), Mathf.Round(Random.Range(0, 10)));
-            SnakeControllers[i].transform.position = new Vector3(position.x, position.y, 0);
-            SnakeControllers[i].SnakeParts = new List<GameObject>();
-            SnakeControllers[i].SnakeParts.Add(SnakeControllers[i].gameObject);
+            PlayerPrefs.SetInt("Score" + (i + 1).ToString(), (SnakeControllers[i].Score - 1) * 10);
         }
 
-
-        // destroy all collectionable objects
-        GameObject[] collectionables = GameObject.FindGameObjectsWithTag("Collectionable");
-        for (int i = 0; i < collectionables.Length; i++)
-        {
-            Destroy(collectionables[i]);
-        }
-
-        // create a new food
-        CreateFood();
-
-        // give the other player a point (if player 0 dies, player 1 gets a point, if player 1 dies, player 0 gets a point)
-        if (player < 0)
-        {
-            // its a draw
-            SnakeControllers[0].Score++;
-            SnakeControllers[1].Score++;
-
-
-        }
-        else if (player == 0)
-        {
-            SnakeControllers[1].Score++;
-        }
-        else
-        {
-            SnakeControllers[0].Score++;
-        }
-
-        //show the score and tell if it was a draw
-        Debug.Log("Player 0: " + SnakeControllers[0].Score + " Player 1: " + SnakeControllers[1].Score);
-        this.MoveDelay = this.InitialMoveDelay;
-
-
+        SceneManager.LoadScene("EndMenu");
     }
 
 }

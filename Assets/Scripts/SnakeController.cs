@@ -13,7 +13,7 @@ public class SnakeController : MonoBehaviour
     private string VerticalVector { get => "Vertical_" + Player; }
     public List<GameObject> SnakeParts = new List<GameObject>();
     public bool ignorePortal = false;
-    public int Score = 0;
+    public int Score { get => SnakeParts.Count; }
 
     public void doMove()
     {
